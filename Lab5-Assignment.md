@@ -43,7 +43,7 @@ As a group, the team will design a unified system and compare it tow hat they ha
 Download and examine the database.
 It contains 400 image pairs of each of the 5 main fingerprint features (arches, loops, etc.).
 The features are encoded in the `.txt` file that corresponds with the `.png`, the features are dispersed randomly throughout the dataset.
-The database is organized as $\text{image pairs} = \\{f_i, s_i\\}$. 
+The database is organized as image pairs = $\\{f_i, s_i\\}$. 
 
 You'll want to break the overall database into two sets:
 
@@ -54,7 +54,7 @@ Process the training set to extract features (identify minutia).
 Each group member will use three different methods.
 This will inform the lab experiment.
 
-To do this, you'll calculate minutia for each reference image ($f_i$) and its corresponding subject image ($s_i$).
+To do this, you'll calculate minutia for each reference image ( $f_i$ ) and its corresponding subject image ( $s_i$ ).
 You'll generally compare distances between these images.
 Try three different ML techniques to do this.
 
@@ -74,8 +74,8 @@ Build a table documenting which methods you used, and the max, min, and average 
 #### Submission (25%)
 
 The table will have 8 columns: method, FRR average, FRR minimum, FRR maximum, FAR average, FAR minimum, FAR maximum, EER.
-The table will have n rows, where $n = \text{the number of feature extraction methods each student used (by name)}$.
-Minimum $n = \text{group size} * 3$.
+The table will have n rows, where n = the number of feature extraction methods each student used (by name).
+Minimum n = group size * 3.
 
 ### 3. Analyze the Table (Group)
 
