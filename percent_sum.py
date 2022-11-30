@@ -22,7 +22,7 @@ def percentImageError(imageA, imageB):
 def main():
     # Add images to testing
     for finger in glob.glob(
-            '\sd04\png_txt'):
+            'sd04_temp\png_txt\*'):
         if finger.endswith('.txt'):
             imageDetails_list.append(finger[-12:])
         else:
@@ -32,9 +32,10 @@ def main():
 
     # Add images to training
     for finger2 in glob.glob(
-            '\sd04\png_txt'):
-            im2 = Image.open(finger2)
-            train.append(im2)
+            'sd04_temp\png_txt\*'):
+            if finger2.endswith('.png'):
+                im2 = Image.open(finger2)
+                train.append(im2)
 
     trainlength = len(train)
     print("Number of train images:", trainlength)
