@@ -16,10 +16,10 @@ finalTestCheck = []
 
 
 
-def difference(imageA, imageB):
-    h = ImageChops.difference(imageA, imageB).histogram()
-    val = math.sqrt(sum(h*(i**2) for i, h in enumerate(h)) / (float(imageA.size[0]) * imageB.size[1]))
-    return val/100
+def percentImageError(imageA, imageB):
+    stat1 = ImageStat.Stat(imageA)
+    stat2 = ImageStat.Stat(imageB)
+    return math.fabs(stat1.stddev[0] - stat2.stddev[0])/stat1.stddev[0]
 
 def main():
     # Add images to testing
@@ -39,13 +39,13 @@ def main():
                 im2 = Image.open(finger2)
                 train.append(im2)
 
-
     trainlength = len(train)
     print("Number of train images:", trainlength)
 
     testlength = len(test)
     print("Number of test images:", testlength)
 
+    #print(test[0])
 
     for everyFinger in train:
         test.append(everyFinger)
@@ -57,15 +57,18 @@ def main():
     random.shuffle(test)
     newLength = len(test)
 
-    while trainNum < len(train): # go thru each train item
+    while trainNum < trainlength: # go thru each train item
         testNum = 0
-        while testNum < len(test): # go thru each test item
+        while testNum < newLength: # go thru each test item
             image1 = train[trainNum]
             image2 = test[testNum]
-            valid = difference(image1,image2)
+
+            valid = percentImageError(image1,image2)
             #print("counter - ", testNum)
-            if valid < 0.40: # 0 is more similar
+
+            if valid <= .1: # 0 is more similar
                 #Image._show(test[testNum])
+                #print("yes")
                 test.pop(testNum)
                 print("train num: ", trainNum)
                 print("test num:  ", testNum)
@@ -77,10 +80,8 @@ def main():
                 #do next iteration
                 testNum += 1
                 if(testNum >= len(test)):
-                    testNum = 0
-                    trainNum += 1
                     break
-
+                #print("next")
 
     print("final length of test - ", len(test))
     numCorrect = 0
