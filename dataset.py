@@ -111,7 +111,9 @@ class Dataset:
         self.training = []
         self.testing = []
 
+        print("Loading data...")
         self.__load_data()
+        print("Splitting data...")
         self.__split_data()
         print("Done")
 
@@ -121,13 +123,10 @@ class Dataset:
 
         :return: None
         """
-        print("Loading data...")
         for rt, dirs, files in os.walk(self.root):
             for f_name in files:
                 if f_name.startswith('f') and f_name.endswith(PNG_EXT):
-                    # Clean File Name
-                    f_name = f_name[1:-4]
-
+                    f_name = f_name[1:-4]  # Remove f/s and .png
                     self.data.append(ImagePair(rt, f_name))
 
     def __split_data(self):
