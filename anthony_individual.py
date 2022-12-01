@@ -12,14 +12,15 @@ def load_image(image_path):
     return cv.imread(image_path, 0)
 
 
-def binarize_image(image):
+def binarize_image(image, method=cv.THRESH_BINARY):
     """
     Converts a grayscale image into a binary image.
 
     :param image: Image to binarize.
+    :param method: Method to use for binarization.
     :return: Binarized image.
     """
-    ret, image = cv.threshold(image, 72, 1, cv.THRESH_BINARY)
+    ret, image = cv.threshold(image, 72, 1, method)
 
     return image
 
@@ -52,71 +53,132 @@ def technique_1(dataset):
     :param dataset: Dataset to use.
     :return: None
     """
-    # Load the first image
-    reference = load_image(dataset.training[10].reference.get_image_path())
-    subject = load_image(dataset.training[10].subject.get_image_path())
 
-    # Perform the morphological transformation
-    reference_lowest_gray, reference_highest_gray = morphological_transformation(reference)
-    subject_lowest_gray, subject_highest_gray = morphological_transformation(subject)
+    # Go through each image in the dataset
 
-    # Take the intersection of the lowest and highest gray values
-    # reference = cv.bitwise_xor(reference_lowest_gray, reference_highest_gray)
-    # subject = cv.bitwise_xor(subject_lowest_gray, subject_highest_gray)
+    distances = []
 
-    # reference = reference_lowest_gray - reference_highest_gray
-    # subject = subject_lowest_gray - subject_highest_gray
+    for image_pair in dataset.training:
+        # Load the first image
+        reference = load_image(image_pair.reference.get_image_path())
+        subject = load_image(image_pair.subject.get_image_path())
 
-    intersection_reference = reference_lowest_gray + reference_highest_gray
-    intersection_subject = subject_lowest_gray + subject_highest_gray
+        # Perform the morphological transformation
+        reference_lowest_gray, reference_highest_gray = morphological_transformation(reference)
+        subject_lowest_gray, subject_highest_gray = morphological_transformation(subject)
 
-    # Binarize the images
-    binary_reference = binarize_image(intersection_reference)
-    binary_subject = binarize_image(intersection_subject)
+        # Take the intersection of the lowest and highest gray values
+        intersection_reference = reference_lowest_gray + reference_highest_gray
+        intersection_subject = subject_lowest_gray + subject_highest_gray
 
-    # Show images
-    figure = plt.figure(constrained_layout=True)
-    figure.set_size_inches(10, 16)
-    figure.suptitle("Technique 1")
-    (original, morph, intersection, binary) = figure.subfigures(4, 1)
+        # Binarize the images
+        binary_reference = binarize_image(intersection_reference)
+        binary_subject = binarize_image(intersection_subject)
 
-    # Original
-    original.suptitle("Original Images")
-    (original_ref, original_sub) = original.subplots(1, 2)
-    original_ref.imshow(reference, cmap='gray')
-    original_ref.set_title("Reference Image")
-    original_sub.imshow(subject, cmap='gray')
-    original_sub.set_title("Subject Image")
+        binary_subject = cv.dilate(binary_subject, cv.getStructuringElement(cv.MORPH_ELLIPSE, (10, 10)), iterations=1)
+        binary_reference = cv.dilate(binary_reference, cv.getStructuringElement(cv.MORPH_ELLIPSE, (10, 10)), iterations=1)
 
-    # Morphological Transformation
-    morph.suptitle("Morphological Transformation")
-    ((morph_ref_low, morph_sub_low), (morph_ref_high, morph_sub_high)) = morph.subplots(2, 2)
-    morph_ref_low.imshow(reference_lowest_gray, cmap='gray')
-    morph_ref_low.set_title("Reference Lowest Gray")
-    morph_ref_high.imshow(reference_highest_gray, cmap='gray')
-    morph_ref_high.set_title("Reference Highest Gray")
-    morph_sub_low.imshow(subject_lowest_gray, cmap='gray')
-    morph_sub_low.set_title("Subject Lowest Gray")
-    morph_sub_high.imshow(subject_highest_gray, cmap='gray')
-    morph_sub_high.set_title("Subject Highest Gray")
+        # Compare the binary images using the euclidean distance
+        distance = cv.matchShapes(binary_reference, binary_subject, cv.CONTOURS_MATCH_I1, 0.0)
+        distances.append(distance)
 
-    # Intersection
-    intersection.suptitle("Intersection")
-    (intersection_ref, intersection_sub) = intersection.subplots(1, 2)
-    intersection_ref.imshow(intersection_reference, cmap='gray')
-    intersection_ref.set_title("Reference Image")
-    intersection_sub.imshow(intersection_subject, cmap='gray')
-    intersection_sub.set_title("Subject Image")
+    # Find the average distance
+    average_distance = sum(distances) / len(distances)
+    print("Training average distance: " + str(average_distance))
 
-    # Binary
-    binary.suptitle("Binary")
-    (binary_ref, binary_sub) = binary.subplots(1, 2)
-    binary_ref.imshow(binary_reference, cmap='gray')
-    binary_ref.set_title("Reference Image")
-    binary_sub.imshow(binary_subject, cmap='gray')
-    binary_sub.set_title("Subject Image")
+    labels = []
+    predictions = []
 
-    plt.show()
+    # Test the average distance
+    for image_pair_reference in dataset.testing:
+        # Load the reference image
+        reference = load_image(image_pair_reference.reference.get_image_path())
+
+        labels.append(image_pair_reference.figure_name)
+
+        for image_pair_subject in dataset.testing:
+            # Load the subject image
+            subject = load_image(image_pair_subject.subject.get_image_path())
+
+            # Perform the morphological transformation
+            reference_lowest_gray, reference_highest_gray = morphological_transformation(reference)
+            subject_lowest_gray, subject_highest_gray = morphological_transformation(subject)
+
+            # Take the intersection of the lowest and highest gray values
+            intersection_reference = reference_lowest_gray + reference_highest_gray
+            intersection_subject = subject_lowest_gray + subject_highest_gray
+
+            # Binarize the images
+            binary_reference = binarize_image(intersection_reference)
+            binary_subject = binarize_image(intersection_subject)
+
+            binary_subject = cv.dilate(binary_subject, cv.getStructuringElement(cv.MORPH_ELLIPSE, (10, 10)), iterations=1)
+            binary_reference = cv.dilate(binary_reference, cv.getStructuringElement(cv.MORPH_ELLIPSE, (10, 10)), iterations=1)
+
+            # Compare the binary images using the euclidean distance
+            distance = cv.matchShapes(binary_reference, binary_subject, cv.CONTOURS_MATCH_I1, 0.0)
+            if distance < (average_distance - .005):
+                predictions.append(image_pair_subject.figure_name)
+                break
+
+    # Calculate the accuracy
+    correct = 0
+    for i in range(len(labels)):
+        if labels[i] == predictions[i]:
+            correct += 1
+
+    accuracy = correct / len(labels)
+    print("Accuracy: " + str(accuracy))
+
+    # Calculate the precision
+    correct = 0
+
+
+
+
+    # # Show images
+    # figure = plt.figure(constrained_layout=True)
+    # figure.set_size_inches(10, 16)
+    # figure.suptitle("Technique 1")
+    # (original, morph, intersection, binary) = figure.subfigures(4, 1, height_ratios=[1, 2, 1, 1])
+    #
+    # # Original
+    # original.suptitle("Original")
+    # (original_ref, original_sub) = original.subplots(1, 2)
+    # original_ref.imshow(reference, cmap='gray')
+    # original_ref.set_title("Reference")
+    # original_sub.imshow(subject, cmap='gray')
+    # original_sub.set_title("Subject")
+    #
+    # # Morphological Transformation
+    # morph.suptitle("Morphological Transformation")
+    # ((morph_ref_low, morph_sub_low), (morph_ref_high, morph_sub_high)) = morph.subplots(2, 2)
+    # morph_ref_low.imshow(reference_lowest_gray, cmap='gray')
+    # morph_ref_low.set_title("R Lowest Gray")
+    # morph_ref_high.imshow(reference_highest_gray, cmap='gray')
+    # morph_ref_high.set_title("R Highest Gray")
+    # morph_sub_low.imshow(subject_lowest_gray, cmap='gray')
+    # morph_sub_low.set_title("S Lowest Gray")
+    # morph_sub_high.imshow(subject_highest_gray, cmap='gray')
+    # morph_sub_high.set_title("S Highest Gray")
+    #
+    # # Intersection
+    # intersection.suptitle("Intersection")
+    # (intersection_ref, intersection_sub) = intersection.subplots(1, 2)
+    # intersection_ref.imshow(intersection_reference, cmap='gray')
+    # intersection_ref.set_title("Reference")
+    # intersection_sub.imshow(intersection_subject, cmap='gray')
+    # intersection_sub.set_title("Subject")
+    #
+    # # Binary
+    # binary.suptitle("Binary")
+    # (binary_ref, binary_sub) = binary.subplots(1, 2)
+    # binary_ref.imshow(binary_reference, cmap='gray')
+    # binary_ref.set_title("Reference")
+    # binary_sub.imshow(binary_subject, cmap='gray')
+    # binary_sub.set_title("Subject")
+    #
+    # plt.show()
 
 
 def main(dataset):
@@ -128,6 +190,7 @@ def main(dataset):
     """
     # Technique 1
     technique_1(dataset)
+    print("Technique 1 complete")
 
 
 # Only if this file is run directly
