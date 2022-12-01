@@ -1,12 +1,11 @@
-import skimage
+"""
+Author: Harsha Philip
+"""
 
-import numpy as np 
-from PIL import Image, ImageChops, ImageStat  
+import glob  # Import file paths
+import random  # shuffle array
 
-import glob # Import file paths
-import mahotas
-import pylab
-import random # shuffle array
+from PIL import Image, ImageChops, ImageStat
 
 test = []
 train = []
@@ -14,13 +13,13 @@ imageDetails_list = []
 finalTestCheck = []
 
 
-
-def difference(imageA, imageB):
-    diff_img = ImageChops.difference(imageA, imageB)
+def difference(image_a, image_b):
+    diff_img = ImageChops.difference(image_a, image_b)
     # Calculate difference as a ratio.
     stat = ImageStat.Stat(diff_img)
     diff_ratio = sum(stat.mean) / (len(stat.mean) * 255)
     return diff_ratio
+
 
 def main():
     # Add images to testing
@@ -36,64 +35,64 @@ def main():
     # Add images to training
     for finger2 in glob.glob(
             'sd04\png_txt\*'):
-            if finger2.endswith('.png'):
-                im2 = Image.open(finger2)
-                train.append(im2)
+        if finger2.endswith('.png'):
+            im2 = Image.open(finger2)
+            train.append(im2)
 
-    trainlength = len(train)
-    print("Number of train images:", trainlength)
+    train_length = len(train)
+    print("Number of train images:", train_length)
 
-    testlength = len(test)
-    print("Number of test images:", testlength)
-
+    test_length = len(test)
+    print("Number of test images:", test_length)
 
     for everyFinger in train:
         test.append(everyFinger)
-        #print()
+        # print()
 
-    newLength = len(test)
-   # print("new test Length - ", newLength)
+    new_length = len(test)
+    # print("new test Length - ", new_length)
 
-    trainNum = 0
+    train_number = 0
     random.shuffle(test)
 
-    while trainNum < trainlength: # go thru each train item
-        testNum = 0
-        while testNum < newLength: # go thru each test item
-            image1 = train[trainNum]
-            image2 = test[testNum]
+    while train_number < train_length:  # go through each train item
+        test_number = 0
+        while test_number < new_length:  # go through each test item
+            image1 = train[train_number]
+            image2 = test[test_number]
 
-            valid = difference(image1,image2)
-            #print("counter - ", testNum)
+            valid = difference(image1, image2)
+            # print("counter - ", test_number)
             # print("Valid", valid)
 
-            if valid < 0.125: # 0 is more similar
-                #Image._show(test[testNum])
-                #print("yes")
-                test.pop(testNum)
-                print("train num: ", trainNum)
-                print("test num:  ", testNum)
-                testNum=0
-                trainNum+=1
-                if trainNum == trainlength:
+            if valid < 0.125:  # 0 is more similar
+                # Image._show(test[test_number])
+                # print("yes")
+                test.pop(test_number)
+                print("train num: ", train_number)
+                print("test num:  ", test_number)
+                test_number = 0
+                train_number += 1
+                if train_number == train_length:
                     break
             else:
                 # do next iteration
-                testNum += 1
-                if (testNum >= len(test)):
-                    testNum = 0
-                    trainNum += 1
+                test_number += 1
+                if test_number >= len(test):
+                    test_number = 0
+                    train_number += 1
                     break
 
     print("final length of test - ", len(test))
-    numCorrect = 0
+    num_correct = 0
     for item in test:
         print("File Name:", item.filename[-12:])
-        fingerPrintNum = int(item.filename[-11:-7])
-        print("Finger Print Number:", fingerPrintNum)
-        if(fingerPrintNum > 1500):
-            numCorrect += 1
-    print("Number of correct fingerprints: " + str(numCorrect) + "/500")
+        finger_print_num = int(item.filename[-11:-7])
+        print("Finger Print Number:", finger_print_num)
+        if finger_print_num > 1500:
+            num_correct += 1
+    print("Number of correct fingerprints: " + str(num_correct) + "/500")
+
 
 if __name__ == '__main__':
-   main()
+    main()
