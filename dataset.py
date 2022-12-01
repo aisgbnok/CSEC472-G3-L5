@@ -100,40 +100,49 @@ class Dataset:
     Create a dataset object for holding all the data.
     """
 
-    def __init__(self, root):
+    def __init__(self, root, automatic=False):
         """
         Initialize the dataset.
 
         :param root: Root directory of the dataset.
+        :param automatic: Whether to automatically populate the dataset using the root directory. False by default.
         """
         self.root = root
         self.data = []
         self.training = []
         self.testing = []
 
-        print("Loading data...")
-        self.__load_data()
-        print("Splitting data...")
-        self.__split_data()
-        print("Done")
+        if automatic:
+            self.populate_dataset(root)
 
-    def __load_data(self):
+    def populate_dataset(self, root=None, print_progress=False):
         """
-        Loads all the figures from the root directory.
+        Loads all the image pairs from the root directory.
 
+        :param root: Path to the root directory. If None, uses the Dataset root directory.
+        :param print_progress: Whether to print progress messages. False by default.
         :return: None
         """
-        for rt, dirs, files in os.walk(self.root):
+        # If no root is given, use the default root
+        if root is None:
+            root = self.root
+
+        if print_progress:
+            print("Loading data...")
+
+        # Generate all the Image Pairs
+        for rt, dirs, files in os.walk(root):
             for f_name in files:
                 if f_name.startswith('f') and f_name.endswith(PNG_EXT):
                     f_name = f_name[1:-4]  # Remove f/s and .png
                     self.data.append(ImagePair(rt, f_name))
 
-    def __split_data(self):
-        """
-        Split the data into training and testing data.
+        if print_progress:
+            print("Splitting data...")
 
-        :return: None
-        """
+        # Split the data into training and testing sets
         self.training = self.data[:1500]
         self.testing = self.data[1500:]
+
+        if print_progress:
+            print("Done")
