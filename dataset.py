@@ -61,6 +61,14 @@ class Image:
             self.clss = clss[clss.find(':') + 1:]
             self.history = history[history.find(':') + 1:]
 
+    def get_image_path(self):
+        """
+        Get the image's path.
+
+        :return: Path to the image.
+        """
+        return self.path + PNG_EXT
+
 
 class ImagePair:
     """
