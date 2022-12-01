@@ -6,6 +6,7 @@ Anthony's individual fingerprint minutiae extraction techniques.
 
 import cv2 as cv
 from matplotlib import pyplot as plt
+from sklearn.metrics import classification_report
 
 
 def load_image(image_path):
@@ -58,6 +59,7 @@ def technique_1(dataset):
 
     distances = []
 
+    print("Training...")
     for image_pair in dataset.training:
         # Load the first image
         reference = load_image(image_pair.reference.get_image_path())
@@ -78,23 +80,30 @@ def technique_1(dataset):
         binary_subject = cv.dilate(binary_subject, cv.getStructuringElement(cv.MORPH_ELLIPSE, (10, 10)), iterations=1)
         binary_reference = cv.dilate(binary_reference, cv.getStructuringElement(cv.MORPH_ELLIPSE, (10, 10)), iterations=1)
 
-        # Compare the binary images using the euclidean distance
-        distance = cv.matchShapes(binary_reference, binary_subject, cv.CONTOURS_MATCH_I1, 0.0)
+        # Find contours
+        contours_reference, hierarchy_reference = cv.findContours(binary_reference, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+        contours_subject, hierarchy_subject = cv.findContours(binary_subject, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+
+        # Compare the binary images
+        distance = cv.matchShapes(contours_reference[0], contours_subject[0], cv.CONTOURS_MATCH_I1, 0.0)
+        image_pair.value = distance
         distances.append(distance)
 
-    # Find the average distance
-    average_distance = sum(distances) / len(distances)
-    print("Training average distance: " + str(average_distance))
+    # Calculate the threshold
+    threshold = sum(distances) / len(distances)
+    print("Threshold: " + str(threshold))
 
     labels = []
     predictions = []
 
+    print("\nTesting...")
     # Test the average distance
     for image_pair_reference in dataset.testing:
         # Load the reference image
         reference = load_image(image_pair_reference.reference.get_image_path())
 
         labels.append(image_pair_reference.figure_name)
+        prediction = "Unknown"
 
         for image_pair_subject in dataset.testing:
             # Load the subject image
@@ -115,11 +124,18 @@ def technique_1(dataset):
             binary_subject = cv.dilate(binary_subject, cv.getStructuringElement(cv.MORPH_ELLIPSE, (10, 10)), iterations=1)
             binary_reference = cv.dilate(binary_reference, cv.getStructuringElement(cv.MORPH_ELLIPSE, (10, 10)), iterations=1)
 
-            # Compare the binary images using the euclidean distance
-            distance = cv.matchShapes(binary_reference, binary_subject, cv.CONTOURS_MATCH_I1, 0.0)
-            if distance < (average_distance - .005):
-                predictions.append(image_pair_subject.figure_name)
+            # Find contours
+            contours_reference, hierarchy_reference = cv.findContours(binary_reference, cv.RETR_TREE,
+                                                                      cv.CHAIN_APPROX_SIMPLE)
+            contours_subject, hierarchy_subject = cv.findContours(binary_subject, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+
+            # Compare the binary images
+            distance = cv.matchShapes(contours_reference[0], contours_subject[0], cv.CONTOURS_MATCH_I1, 0.0)
+            if distance < threshold:
+                prediction = image_pair_subject.figure_name
                 break
+
+        predictions.append(prediction)
 
     # Calculate the accuracy
     correct = 0
@@ -130,11 +146,9 @@ def technique_1(dataset):
     accuracy = correct / len(labels)
     print("Accuracy: " + str(accuracy))
 
-    # Calculate the precision
-    correct = 0
+    print(classification_report(labels, predictions))
 
-
-
+    print("Technique 1 complete")
 
     # # Show images
     # figure = plt.figure(constrained_layout=True)

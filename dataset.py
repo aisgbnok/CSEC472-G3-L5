@@ -85,6 +85,7 @@ class ImagePair:
         self.figure_name = figure_name
         self.reference = None
         self.subject = None
+        self.value = None
 
         self.__generate_pair(root)
 
