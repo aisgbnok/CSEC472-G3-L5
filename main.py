@@ -31,11 +31,11 @@ def bold(text):
     return f"\033[1m{text}\033[0m"
 
 
-def print_menu(style=MenuStyle.FULL):
+def print_menu(style=MenuStyle.MENU):
     """
     Print the welcome message.
 
-    :return: None
+    :return: Integer of user choice if style is FULL or MENU, otherwise None.
     """
     title = "CSEC 472: Lab 5"
     subtitle = "Group 3"
@@ -50,10 +50,16 @@ def print_menu(style=MenuStyle.FULL):
         print(f'{"":#^{width}}\n')
 
     if style == MenuStyle.FULL or style == MenuStyle.MENU:
-        print(f'## User Menu\n{description}\n')
+        print(f'{"## User Menu ":#<{width}}')
+        print(f'{description}\n')
 
         print("0. Exit")
         print("1. Run Anthony's individual components.")
+
+        user_choice = int(input("\nEnter your choice: ").strip())
+        print(f'{"":#^{width}}\n')
+
+        return user_choice
 
 
 def load_data():
@@ -81,10 +87,15 @@ def main():
     dataset = load_data()
 
     # Handle user menu selection
-    user_response = "-1"
-    while int(user_response.strip()) != 0:
-        print_menu(MenuStyle.MENU)
-        user_response = input("Enter your choice: ")
+    user_choice = -1
+    while user_choice != 0:
+        user_choice = print_menu()
+
+        if user_choice == 1:
+            from anthony_individual import main as anthony_main
+            anthony_main(dataset)
+
+        print()
 
 
 # Only if this file is run directly
