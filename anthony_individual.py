@@ -7,8 +7,6 @@ Anthony's individual fingerprint minutiae extraction techniques.
 import cv2 as cv
 from matplotlib import pyplot as plt
 
-from main import load_data
-
 
 def load_image(image_path):
     return cv.imread(image_path, 0)
@@ -16,17 +14,31 @@ def load_image(image_path):
 
 def binarize_image(image):
     """
-    Binarize an image.
+    Converts a grayscale image into a binary image.
 
     :param image: Image to binarize.
     :return: Binarized image.
     """
-
-    # Binarize image
     ret, image = cv.threshold(image, 72, 1, cv.THRESH_BINARY)
 
-    # Return binarized image
     return image
+
+
+def morphological_transformation(image):
+    """
+    Performs a morphological transformation on the greyscale image.
+
+    :return: The transformed image.
+    """
+    # Create a structuring element
+    eclipse = cv.getStructuringElement(cv.MORPH_ELLIPSE, (10, 10))
+
+    # Perform the morphological transformation
+    lowest_gray = cv.morphologyEx(image, cv.MORPH_OPEN, eclipse)
+    highest_gray = cv.morphologyEx(image, cv.MORPH_CLOSE, eclipse)
+
+    # Return the intersection of the two images
+    return lowest_gray + highest_gray
 
 
 def main(dataset):
@@ -41,6 +53,9 @@ def main(dataset):
     subject_image = load_image(dataset.training[0].subject.get_image_path())
 
     # Binarize images
+    reference_image = morphological_transformation(reference_image)
+    subject_image = morphological_transformation(subject_image)
+
     reference_image = binarize_image(reference_image)
     subject_image = binarize_image(subject_image)
 
@@ -55,4 +70,6 @@ def main(dataset):
 
 # Only if this file is run directly
 if __name__ == '__main__':
+    from main import load_data
+
     main(load_data())
