@@ -19,6 +19,7 @@ class MenuStyle(Enum):
     FULL = 0
     WELCOME = 1
     MENU = 2
+    EXIT = 3
 
 
 def bold(text):
@@ -55,11 +56,18 @@ def print_menu(style=MenuStyle.MENU):
 
         print("0. Exit")
         print("1. Run Anthony's individual components.")
+        print("2. Run Harsha's individual components.")
 
         user_choice = int(input("\nEnter your choice: ").strip())
         print(f'{"":#^{width}}\n')
 
         return user_choice
+
+    if style == MenuStyle.EXIT:
+        print(f'{"## Exiting Program ":#<{width}}')
+        print(f'##{" Thank you, for enduring our ":<{width - 4}}##')
+        print(f'##{" lackluster results! :( ":<{width - 4}}##')
+        print(f'{"":#^{width}}\n')
 
 
 def load_data():
@@ -95,7 +103,16 @@ def main():
             from anthony_individual import main as anthony_main
             anthony_main(dataset)
 
+        elif user_choice == 2:
+            print("Harsha's individual components are not automatic at this time.")
+            print("Instead you can run percent_stddev.py, pil imagestat ratio.py, and rms.py, separately.")
+            print("They all have Harsha's name as the author.")
+            print("Results are found in the respective .txt files.")
+            print("Thank you!")
+
         print()
+
+    print_menu(MenuStyle.EXIT)
 
 
 # Only if this file is run directly

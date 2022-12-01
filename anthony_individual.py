@@ -59,6 +59,7 @@ def technique_1(dataset):
 
     distances = []
 
+    print("Technique 1")
     print("Training...")
     for image_pair in dataset.training:
         # Load the first image
@@ -204,7 +205,6 @@ def main(dataset):
     """
     # Technique 1
     technique_1(dataset)
-    print("Technique 1 complete")
 
 
 # Only if this file is run directly
